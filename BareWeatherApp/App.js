@@ -16,45 +16,37 @@ import {
   Text,
   View,
 } from 'react-native';
+// TODO: Import Rive from rive-react-native
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {Searchbar} from 'react-native-paper';
 
-const STATE_MACHINE_NAME = 'State Machine 1';
-
 const App = () => {
-  const hoursListRef = useRef(null);
-
+  // Tracks the user-provided searchbox value for the city
   const [citySearch, setCitySearch] = useState('');
-  const [city, setCity] = useState('');
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [weatherData, setWeatherData] = useState();
-  const [hourListYCoords, setHourListYCoords] = useState({});
 
-  const [currentTime, setCurrentTime] = useState(
+  // Tracks the City to pull weather data from
+  const [city, setCity] = useState('Chicago');
+
+  // Tracks if the data is still loading or not
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  // Data from the Weather API
+  const [weatherData, setWeatherData] = useState();
+
+  // The time being highlighted for the weather shown as the hero text
+  const [highlightedTime, setHighlightedTime] = useState(
     new Date(Date.now()).getHours(),
   );
-  const [highlightedTime, setHighlightedTime] = useState();
+
+  // UI state variable to track where each hour is positioned in the hour list
+  // so we can scroll to the exact position of the hour selected
+  const [hourListYCoords, setHourListYCoords] = useState({});
+  const hoursListRef = useRef(null);
 
   const getWeatherData = async city => {
     try {
-      console.log(WEATHER_API_KEY);
-      const data = await fetch(
-        `http://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${
-          city || 'Chicago'
-        }&days=1`,
-      );
-      const jsonData = await data.json();
-      console.log(jsonData);
-      if (!weatherData) {
-        // TODO: Set "cloudy" and "rainy" inputs on the Rive state machine
-      }
-      setWeatherData(jsonData);
-      const localTimeHours = new Date(
-        jsonData.location.localtime_epoch * 1000,
-      ).getHours();
-      setCurrentTime(localTimeHours);
-      setHighlightedTime(localTimeHours);
-      // TODO: Set the "time" input on the state machine
+      // TODO: Call the weather API and update Rive state machine for all inputs
+      // And set highlightedTime and weatherData
     } catch (error) {
       console.error(error);
     } finally {
@@ -68,22 +60,19 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city]);
 
-  // Scroll to hour in hourly forecast list
   useEffect(() => {
     if (Object.keys(hourListYCoords).length >= 24) {
       hoursListRef.current?.scrollTo({
         x: 0,
-        y: hourListYCoords[currentTime],
+        y: hourListYCoords[highlightedTime],
         animated: true,
       });
     }
-  }, [hourListYCoords, currentTime]);
+  }, [hourListYCoords, highlightedTime]);
 
   useEffect(() => {
     // TODO: Toggle the isOpen input on the Rive state machine
   }, [isLoadingData]);
-
-  // TODO: Set new current time every minute
 
   const getCityData = async city => {
     try {
@@ -103,16 +92,16 @@ const App = () => {
     getCityData(citySearch);
   };
 
-  console.log(weatherData?.forecast);
+  const onHourClick = hourData => {
+    if (hourData) {
+      // TODO: Get new highlighted hour time and set it in state
+      // TODO: Set 'time', 'cloudy', and 'rainy' inputs
+    }
+  };
 
-  const hoursLeftData = weatherData
+  const hourlyData = weatherData
     ? weatherData.forecast.forecastday[0].hour
     : [];
-
-  const onHourClick = hourData => {
-    setHighlightedTime(new Date(hourData.time_epoch * 1000).getHours());
-    // TODO: Set all the inputs of the state machine for the new hour forecast data
-  };
 
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -124,26 +113,28 @@ const App = () => {
           value={citySearch}
         />
       </View>
+      {/* TODO: Add Rive component here */}
       <Text style={styles.cityTitle}>
-        {isLoadingData
+        {isLoadingData || !weatherData
           ? 'Loading...'
           : `${weatherData.location.name}, ${weatherData.location.region}`}
       </Text>
       <Text style={styles.tempHero}>
-        {isLoadingData
+        {isLoadingData || !weatherData
           ? null
-          : `${Math.round(
-              weatherData.forecast.forecastday[0].hour[highlightedTime].temp_f,
-            )}°`}
+          : `${weatherData.forecast.forecastday[0].hour[highlightedTime].temp_f}`}
       </Text>
       <Text style={styles.hourlyViewHeader}>{'Hourly Forecast'}</Text>
-      <ScrollView style={styles.hourlyScrollView} ref={hoursListRef}>
-        {hoursLeftData.map((hourData, idx) => {
-          const hourInt = new Date(hourData.time_epoch * 1000).getHours();
-          const hourDisplay = `${hourInt % 12 === 0 ? 12 : hourInt % 12} ${
-            hourInt >= 12 ? 'PM' : 'AM'
-          }`;
-          const isHighlighted = hourInt === highlightedTime;
+      <ScrollView style={styles.hourlyScrollView}>
+        {hourlyData.map((hourData, idx) => {
+          const parsedHour = parseInt(
+            hourData.time.split(' ')[1].split(':')[0],
+            10,
+          );
+          const hourDisplay = `${
+            parsedHour % 12 === 0 ? 12 : parsedHour % 12
+          } ${parsedHour >= 12 ? 'PM' : 'AM'}`;
+          const isHighlighted = parsedHour === highlightedTime;
           return (
             <TouchableHighlight
               key={hourData.time_epoch}
@@ -162,10 +153,7 @@ const App = () => {
               }}>
               <View style={styles.hourContainer}>
                 <Text style={styles.hourRowText}>{`${hourDisplay}`}</Text>
-                <Text style={styles.hourRowText}>{`${Math.round(
-                  hourData.temp_f,
-                )}°F / ${Math.round(hourData.temp_c)}°C`}</Text>
-                <Text style={styles.hourRowText}>{'>'}</Text>
+                {/* TODO: Add text for temp display */}
               </View>
             </TouchableHighlight>
           );
@@ -183,7 +171,7 @@ const styles = StyleSheet.create({
   },
   searchSection: {
     position: 'absolute',
-    top: 42,
+    top: 50,
     height: 40,
     flexDirection: 'row',
     justifyContent: 'center',
