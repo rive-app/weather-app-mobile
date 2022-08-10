@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "weather_app.riv",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
