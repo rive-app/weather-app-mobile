@@ -94,7 +94,11 @@ const App = () => {
 
   const onHourClick = hourData => {
     if (hourData) {
-      // TODO: Get new highlighted hour time and set it in state
+      const newHighlitedHour = parseInt(
+        hourData.time.split(' ')[1].split(':')[0],
+        10,
+      );
+      setHighlightedTime(newHighlitedHour);
       // TODO: Set 'time', 'cloudy', and 'rainy' inputs
     }
   };
@@ -122,7 +126,7 @@ const App = () => {
       <Text style={styles.tempHero}>
         {isLoadingData || !weatherData
           ? null
-          : `${weatherData.forecast.forecastday[0].hour[highlightedTime].temp_f}`}
+          : `${weatherData.forecast.forecastday[0].hour[highlightedTime].temp_f}°F`}
       </Text>
       <Text style={styles.hourlyViewHeader}>{'Hourly Forecast'}</Text>
       <ScrollView style={styles.hourlyScrollView}>
@@ -153,7 +157,9 @@ const App = () => {
               }}>
               <View style={styles.hourContainer}>
                 <Text style={styles.hourRowText}>{`${hourDisplay}`}</Text>
-                {/* TODO: Add text for temp display */}
+                <Text style={styles.hourRowText}>{`${Math.round(
+                  hourData.temp_f,
+                )}°F / ${Math.round(hourData.temp_c)}°C`}</Text>
               </View>
             </TouchableHighlight>
           );
@@ -195,7 +201,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 32,
     fontWeight: '600',
-    padding: '0 5%',
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingLeft: '5%',
+    paddingRight: '5%',
     color: 'white',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowRadius: 3,
@@ -209,7 +218,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 60,
     fontWeight: '700',
-    padding: '0 5%',
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingLeft: '5%',
+    paddingRight: '5%',
     color: 'white',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowRadius: 3,
